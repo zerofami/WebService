@@ -1,19 +1,7 @@
 from imposm.parser import OSMParser
 import pymongo
 
-
-class Place(object):
-    def __init__(self, coords, type, name):
-        self.coords = [round(coord, 7) for coord in coords]
-        self.type = type
-        self.name = name
-
-    def as_dict(self):
-        return {
-            'location': self.coords,
-            'type': self.type,
-            'name': self.name
-        }
+from place import Place
 
 
 places= []
@@ -34,7 +22,10 @@ def init_mongo():
     places_collection = mongo_client.map.places
     places_collection.remove()
     places_collection.create_index([('location', pymongo.GEOSPHERE)])
-    places_collection.insert([p.as_dict() for p in places])
+    try:
+        places_collection.insert([p.as_dict() for p in places], continue_on_error=True)
+    except pymongo.errors.DuplicateKeyError:
+        pass
 
 
 init_mongo()
